@@ -14,6 +14,11 @@ class Order(Base):
 
     id = Column(Integer, primary_key=True)
 
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id")
+    )
+
     coffee_id = Column(
         Integer,
         ForeignKey("coffees.id")
