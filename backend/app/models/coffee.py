@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import relationship
 
 from app.database import Base
 
@@ -16,3 +17,8 @@ class Coffee(Base):
     description = Column(String)
 
     image = Column(String)
+    orders = relationship(
+        "Order",
+        back_populates="coffee",
+        cascade="all, delete"
+    )

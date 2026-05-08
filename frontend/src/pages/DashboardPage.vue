@@ -15,10 +15,23 @@ const notes = ref("");
 
 const successMessage = ref("");
 
-const loadCoffees = async () => {
-  const response = await api.get("/coffees");
+const showEditModal = ref(false);
 
-  coffees.value = response.data;
+const editCoffee = ref({
+  id: null,
+  title: "",
+  description: "",
+  image: "",
+});
+
+const loadCoffees = async () => {
+  try {
+    const response = await api.get("/coffees");
+
+    coffees.value = response.data;
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 const openOrderModal = (coffee) => {
@@ -46,6 +59,55 @@ const createOrder = async () => {
     console.error(err);
 
     alert("Failed to create order");
+  }
+};
+
+const openEditModal = (coffee) => {
+  editCoffee.value = {
+    id: coffee.id,
+    title: coffee.title,
+    description: coffee.description,
+    image: coffee.image,
+  };
+
+  showEditModal.value = true;
+};
+
+const updateCoffee = async () => {
+  try {
+    await api.put(`/coffees/${editCoffee.value.id}`, {
+      title: editCoffee.value.title,
+      description: editCoffee.value.description,
+      image: editCoffee.value.image,
+    });
+
+    successMessage.value = "Coffee updated successfully";
+
+    showEditModal.value = false;
+
+    loadCoffees();
+  } catch (err) {
+    console.error(err);
+
+    alert("Failed to update coffee");
+  }
+};
+
+const deleteCoffee = async (id) => {
+  const confirmed = confirm("Delete this coffee?");
+
+  if (!confirmed) return;
+
+  try {
+    await api.delete(`/coffees/${id}`);
+
+    successMessage.value = "Coffee deleted successfully";
+
+    loadCoffees();
+  } catch (err) {
+    console.error(err);
+
+    alert("Failed to delete coffee");
   }
 };
 
@@ -96,15 +158,34 @@ onMounted(() => {
           </td>
 
           <td>
-            <button @click="openOrderModal(coffee)" class="btn btn-primary">
-              Order
-            </button>
+            <div class="d-flex gap-2">
+              <button
+                @click="openOrderModal(coffee)"
+                class="btn btn-primary btn-sm"
+              >
+                Order
+              </button>
+
+              <button
+                @click="openEditModal(coffee)"
+                class="btn btn-warning btn-sm"
+              >
+                Edit
+              </button>
+
+              <button
+                @click="deleteCoffee(coffee.id)"
+                class="btn btn-danger btn-sm"
+              >
+                Delete
+              </button>
+            </div>
           </td>
         </tr>
       </tbody>
     </table>
 
-    <!-- MODAL -->
+    <!-- ORDER MODAL -->
 
     <div v-if="showModal" class="modal fade show d-block" tabindex="-1">
       <div class="modal-dialog">
@@ -141,6 +222,50 @@ onMounted(() => {
 
             <button class="btn btn-primary" @click="createOrder">
               Submit Order
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDIT MODAL -->
+
+    <div v-if="showEditModal" class="modal fade show d-block" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Edit Coffee</h5>
+
+            <button class="btn-close" @click="showEditModal = false"></button>
+          </div>
+
+          <div class="modal-body">
+            <input
+              v-model="editCoffee.title"
+              class="form-control mb-3"
+              placeholder="Title"
+            />
+
+            <textarea
+              v-model="editCoffee.description"
+              class="form-control mb-3"
+              placeholder="Description"
+            ></textarea>
+
+            <input
+              v-model="editCoffee.image"
+              class="form-control"
+              placeholder="Image URL"
+            />
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" @click="showEditModal = false">
+              Close
+            </button>
+
+            <button class="btn btn-warning" @click="updateCoffee">
+              Update
             </button>
           </div>
         </div>
